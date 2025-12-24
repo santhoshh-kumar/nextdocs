@@ -1,8 +1,5 @@
-# Dependencies
-node_modules/
-
-# Environment
-.env.local
-
-# Logs
+node_modules
+dist
+.env
 *.log
+coverage
