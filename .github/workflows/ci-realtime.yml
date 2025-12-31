@@ -1,0 +1,45 @@
+name: CI - Realtime
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "realtime/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".prettierrc"
+      - ".editorconfig"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "realtime/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".prettierrc"
+      - ".editorconfig"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-realtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+      - name: Install Dependencies
+        run: npm ci
+      - name: Check Formatting
+        run: npm run format -w realtime
+      - name: Lint
+        run: npm run lint -w realtime
+      - name: Test
+        run: npm test -w realtime
+      - name: Build
+        run: npm run build -w realtime

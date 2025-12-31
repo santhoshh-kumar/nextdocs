@@ -1,0 +1,80 @@
+services:
+  nextdesk-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/nextdesk}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-nextdesk}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-nextdesk}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+    volumes:
+      - ./api:/app
+      - /app/target
+      - maven_data:/root/.m2
+    depends_on:
+      - postgres
+    networks:
+      - nextdesk-network
+
+  nextdesk-web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      target: builder
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_REALTIME_URL=ws://localhost:1234
+    volumes:
+      - ./web:/app/web
+      - ./tsconfig.base.json:/app/tsconfig.base.json
+      - ./.prettierrc:/app/.prettierrc
+      - /app/web/node_modules
+      - /app/web/.next
+    command: npm run dev
+    networks:
+      - nextdesk-network
+
+  nextdesk-realtime:
+    build:
+      context: .
+      dockerfile: realtime/Dockerfile
+      target: builder
+    ports:
+      - "1234:1234"
+    environment:
+      - PORT=1234
+      - MAX_GLOBAL_CONNS=1000
+    volumes:
+      - ./realtime:/app/realtime
+      - ./tsconfig.base.json:/app/tsconfig.base.json
+      - ./.prettierrc:/app/.prettierrc
+      - /app/realtime/node_modules
+      - /app/realtime/dist
+    command: npm run dev
+    networks:
+      - nextdesk-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-nextdesk}
+      - POSTGRES_USER=${POSTGRES_USER:-nextdesk}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nextdesk}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nextdesk-network
+
+networks:
+  nextdesk-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  maven_data:
