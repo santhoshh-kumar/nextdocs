@@ -1,17 +1,17 @@
-import { spawn, ChildProcess } from "child_process";
-import path from "path";
-import net, { AddressInfo } from "net";
+import { spawn, ChildProcess } from 'child_process';
+import path from 'path';
+import net, { AddressInfo } from 'net';
 
-const SERVER_PATH = path.join(__dirname, "../../src/server.ts");
-const TSX_PATH = path.join(__dirname, "../../node_modules/.bin/tsx");
+const SERVER_PATH = path.join(__dirname, '../../src/server.ts');
+const TSX_PATH = path.join(__dirname, '../../node_modules/.bin/tsx');
 
-describe("Server Lifecycle Integration", () => {
+describe('Server Lifecycle Integration', () => {
   let serverProcess: ChildProcess | null = null;
   const TEST_PORT = 12345;
 
   afterEach(async () => {
     if (serverProcess) {
-      serverProcess.kill("SIGTERM");
+      serverProcess.kill('SIGTERM');
 
       let timeoutId: NodeJS.Timeout;
       const timeoutPromise = new Promise<void>((resolve) => {
@@ -20,7 +20,7 @@ describe("Server Lifecycle Integration", () => {
 
       const exitPromise = new Promise<void>((resolve) => {
         if (!serverProcess) return resolve();
-        serverProcess.once("exit", () => resolve());
+        serverProcess.once('exit', () => resolve());
       });
 
       await Promise.race([exitPromise, timeoutPromise]);
@@ -28,7 +28,7 @@ describe("Server Lifecycle Integration", () => {
 
       // Force kill if it hasn't exited
       if (serverProcess && serverProcess.exitCode === null) {
-        serverProcess.kill("SIGKILL");
+        serverProcess.kill('SIGKILL');
       }
 
       serverProcess = null;
@@ -36,7 +36,7 @@ describe("Server Lifecycle Integration", () => {
   });
 
   function startServer(
-    env: Record<string, string> = {},
+    env: Record<string, string> = {}
   ): Promise<{ process: ChildProcess; output: string }> {
     return new Promise((resolve, reject) => {
       // Precedence: explicit env override > logic default (TEST_PORT) > process.env
@@ -48,27 +48,24 @@ describe("Server Lifecycle Integration", () => {
           PORT: port,
           ...env,
         },
-        stdio: "pipe",
+        stdio: 'pipe',
       });
 
-      let output = "";
-      let errorOutput = "";
+      let output = '';
+      let errorOutput = '';
       let settled = false;
       // eslint-disable-next-line prefer-const
       let startupTimeout: NodeJS.Timeout | undefined;
 
       const cleanup = () => {
         if (startupTimeout) clearTimeout(startupTimeout);
-        proc.stdout?.off("data", onStdout);
-        proc.stderr?.off("data", onStderr);
-        proc.off("error", onError);
-        proc.off("exit", onExit);
+        proc.stdout?.off('data', onStdout);
+        proc.stderr?.off('data', onStderr);
+        proc.off('error', onError);
+        proc.off('exit', onExit);
       };
 
-      const settle = (
-        err?: Error,
-        result?: { process: ChildProcess; output: string },
-      ) => {
+      const settle = (err?: Error, result?: { process: ChildProcess; output: string }) => {
         if (settled) return;
         settled = true;
         cleanup();
@@ -79,7 +76,7 @@ describe("Server Lifecycle Integration", () => {
       const onStdout = (data: Buffer) => {
         const str = data.toString();
         output += str;
-        if (str.includes("NextDesk Realtime Server started")) {
+        if (str.includes('NextDesk Realtime Server started')) {
           settle(undefined, { process: proc, output });
         }
       };
@@ -94,26 +91,18 @@ describe("Server Lifecycle Integration", () => {
 
       const onExit = (code: number) => {
         if (!settled) {
-          settle(
-            new Error(
-              `Server exited with code ${code}. Stderr: ${errorOutput}`,
-            ),
-          );
+          settle(new Error(`Server exited with code ${code}. Stderr: ${errorOutput}`));
         }
       };
 
-      proc.stdout?.on("data", onStdout);
-      proc.stderr?.on("data", onStderr);
-      proc.on("error", onError);
-      proc.on("exit", onExit);
+      proc.stdout?.on('data', onStdout);
+      proc.stderr?.on('data', onStderr);
+      proc.on('error', onError);
+      proc.on('exit', onExit);
 
       startupTimeout = setTimeout(() => {
         if (!settled) {
-          settle(
-            new Error(
-              `Server startup timed out. Output: ${output} Error: ${errorOutput}`,
-            ),
-          );
+          settle(new Error(`Server startup timed out. Output: ${output} Error: ${errorOutput}`));
         }
       }, 5000);
     });
@@ -121,7 +110,7 @@ describe("Server Lifecycle Integration", () => {
 
   function waitForExit(proc: ChildProcess): Promise<number | null> {
     return new Promise((resolve) => {
-      proc.on("exit", (code) => {
+      proc.on('exit', (code) => {
         resolve(code);
       });
     });
@@ -131,41 +120,41 @@ describe("Server Lifecycle Integration", () => {
     return new Promise((resolve, reject) => {
       const server = net.createServer();
       server.unref();
-      server.on("error", reject);
+      server.on('error', reject);
       server.listen(0, () => {
         const addr = server.address();
-        if (addr && typeof addr !== "string" && (addr as AddressInfo).port) {
+        if (addr && typeof addr !== 'string' && (addr as AddressInfo).port) {
           const port = (addr as AddressInfo).port;
           server.close(() => {
             resolve(port);
           });
         } else {
           server.close(() => {
-            reject(new Error("Failed to retrieve address from server"));
+            reject(new Error('Failed to retrieve address from server'));
           });
         }
       });
     });
   }
 
-  it("should start successfully", async () => {
+  it('should start successfully', async () => {
     const port = await getFreePort();
     const { process: proc, output } = await startServer({
       PORT: port.toString(),
     });
     serverProcess = proc;
-    expect(output).toContain("NextDesk Realtime Server started");
+    expect(output).toContain('NextDesk Realtime Server started');
     // Log content is JSON stringified, so quotes might be escaped
     // or formatted differently
     expect(output).toContain(`"port":${port}`);
   });
 
-  it("should shut down gracefully on SIGTERM", async () => {
+  it('should shut down gracefully on SIGTERM', async () => {
     const port = await getFreePort();
     const { process: proc } = await startServer({ PORT: port.toString() });
     serverProcess = proc;
 
-    proc.kill("SIGTERM");
+    proc.kill('SIGTERM');
 
     const code = await waitForExit(proc);
 
@@ -173,7 +162,7 @@ describe("Server Lifecycle Integration", () => {
     serverProcess = null;
   }, 10000);
 
-  it("should fail if port is already in use", async () => {
+  it('should fail if port is already in use', async () => {
     const port = await getFreePort();
     const { process: proc1 } = await startServer({ PORT: port.toString() });
     serverProcess = proc1;

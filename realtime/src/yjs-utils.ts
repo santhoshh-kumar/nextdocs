@@ -1,12 +1,12 @@
-import * as Y from "yjs";
-import * as syncProtocol from "y-protocols/sync";
-import * as awarenessProtocol from "y-protocols/awareness";
-import * as encoding from "lib0/encoding";
-import * as decoding from "lib0/decoding";
-import * as map from "lib0/map";
-import { WebSocket } from "ws";
+import * as Y from 'yjs';
+import * as syncProtocol from 'y-protocols/sync';
+import * as awarenessProtocol from 'y-protocols/awareness';
+import * as encoding from 'lib0/encoding';
+import * as decoding from 'lib0/decoding';
+import * as map from 'lib0/map';
+import { WebSocket } from 'ws';
 
-import logger from "./logger";
+import logger from './logger';
 
 const MESSAGE_SYNC = 0;
 const MESSAGE_AWARENESS = 1;
@@ -24,8 +24,8 @@ class WSSharedDoc extends Y.Doc {
     this.conns = new Map();
     this.awareness = new awarenessProtocol.Awareness(this);
 
-    this.on("update", this._updateHandler.bind(this));
-    this.awareness.on("update", this._awarenessUpdateHandler.bind(this));
+    this.on('update', this._updateHandler.bind(this));
+    this.awareness.on('update', this._awarenessUpdateHandler.bind(this));
   }
 
   _updateHandler(update: Uint8Array, origin: unknown): void {
@@ -39,7 +39,7 @@ class WSSharedDoc extends Y.Doc {
         try {
           conn.send(message, { binary: true });
         } catch (err) {
-          logger.error("Failed to send update", {
+          logger.error('Failed to send update', {
             error: (err as Error).message,
           });
         }
@@ -48,12 +48,8 @@ class WSSharedDoc extends Y.Doc {
   }
 
   _awarenessUpdateHandler(
-    {
-      added,
-      updated,
-      removed,
-    }: { added: number[]; updated: number[]; removed: number[] },
-    origin: unknown,
+    { added, updated, removed }: { added: number[]; updated: number[]; removed: number[] },
+    origin: unknown
   ): void {
     const changedClients = added.concat(updated).concat(removed);
 
@@ -70,7 +66,7 @@ class WSSharedDoc extends Y.Doc {
     encoding.writeVarUint(encoder, MESSAGE_AWARENESS);
     encoding.writeVarUint8Array(
       encoder,
-      awarenessProtocol.encodeAwarenessUpdate(this.awareness, changedClients),
+      awarenessProtocol.encodeAwarenessUpdate(this.awareness, changedClients)
     );
     const message = encoding.toUint8Array(encoder);
 
@@ -79,7 +75,7 @@ class WSSharedDoc extends Y.Doc {
         try {
           conn.send(message, { binary: true });
         } catch (err) {
-          logger.error("Failed to send awareness update", {
+          logger.error('Failed to send awareness update', {
             error: (err as Error).message,
           });
         }
@@ -96,16 +92,12 @@ class WSSharedDoc extends Y.Doc {
 function getYDoc(docName: string): WSSharedDoc {
   return map.setIfUndefined(docs, docName, () => {
     const doc = new WSSharedDoc(docName);
-    logger.debug("Created Yjs document", { docName });
+    logger.debug('Created Yjs document', { docName });
     return doc;
   });
 }
 
-function handleMessage(
-  conn: WebSocket,
-  doc: WSSharedDoc,
-  message: Uint8Array,
-): void {
+function handleMessage(conn: WebSocket, doc: WSSharedDoc, message: Uint8Array): void {
   try {
     const encoder = encoding.createEncoder();
     const decoder = decoding.createDecoder(message);
@@ -125,15 +117,15 @@ function handleMessage(
         awarenessProtocol.applyAwarenessUpdate(
           doc.awareness,
           decoding.readVarUint8Array(decoder),
-          conn,
+          conn
         );
         break;
 
       default:
-        logger.warn("Unknown message type", { messageType });
+        logger.warn('Unknown message type', { messageType });
     }
   } catch (err) {
-    logger.error("Error handling message", {
+    logger.error('Error handling message', {
       error: (err as Error).message,
       stack: (err as Error).stack,
     });
@@ -158,33 +150,26 @@ export function setupWSConnection(conn: WebSocket, docName: string): void {
     encoding.writeVarUint(awarenessEncoder, MESSAGE_AWARENESS);
     encoding.writeVarUint8Array(
       awarenessEncoder,
-      awarenessProtocol.encodeAwarenessUpdate(
-        doc.awareness,
-        Array.from(awarenessStates.keys()),
-      ),
+      awarenessProtocol.encodeAwarenessUpdate(doc.awareness, Array.from(awarenessStates.keys()))
     );
     conn.send(encoding.toUint8Array(awarenessEncoder), { binary: true });
   }
 
-  conn.on("message", (message) => {
+  conn.on('message', (message) => {
     handleMessage(conn, doc, new Uint8Array(message as Buffer));
   });
 
-  conn.on("close", () => {
+  conn.on('close', () => {
     const controlledIds = doc.conns.get(conn);
     doc.conns.delete(conn);
 
     if (controlledIds) {
-      awarenessProtocol.removeAwarenessStates(
-        doc.awareness,
-        Array.from(controlledIds),
-        null,
-      );
+      awarenessProtocol.removeAwarenessStates(doc.awareness, Array.from(controlledIds), null);
     }
 
     // Clean up document when last connection closes
     if (doc.conns.size === 0) {
-      logger.debug("Destroying Yjs document (no connections)", { docName });
+      logger.debug('Destroying Yjs document (no connections)', { docName });
       doc.destroy();
       docs.delete(docName);
     }
