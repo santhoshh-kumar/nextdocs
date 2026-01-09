@@ -73,7 +73,7 @@ describe('Config', () => {
     resetEnv();
     process.env.PORT = '70000';
     await expect(import('../../src/config')).rejects.toThrow('Invalid PORT');
-    
+
     resetEnv();
     process.env.PORT = 'abc';
     await expect(import('../../src/config')).rejects.toThrow('Invalid PORT');

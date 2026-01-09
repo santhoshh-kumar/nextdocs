@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#
+# We use this script to unify development tasks across services,
+# abstracting Docker Compose interactions.
+#
+# We provide the following commands via ./nd: 
+# test, lint, format, build, build-image, restart, logs, shell, db, up, down.
+node scripts/nd.js "$@"

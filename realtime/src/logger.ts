@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import config from './config';
 
 const LOG_LEVELS = {
@@ -35,8 +36,8 @@ function formatMessage(level: LogLevel, message: string, meta: LogMeta = {}): st
     try {
       metaStr = ` ${JSON.stringify(meta, getSafeReplacer())}`;
     } catch (error) {
-       const errorMessage = error instanceof Error ? error.message : String(error);
-       metaStr = ` [unserializable meta: ${errorMessage}]`;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      metaStr = ` [unserializable meta: ${errorMessage}]`;
     }
   }
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${metaStr}`;

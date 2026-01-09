@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "NextDesk",
-  description: "An open-source, browser-based collaborative coding workspace with built-in video calling",
+  description:
+    "An open-source, browser-based collaborative coding workspace with built-in video calling",
 };
 
 export default function RootLayout({

@@ -9,7 +9,6 @@ jest.mock('../../src/config', () => ({
 }));
 
 import logger from '../../src/logger';
-import config from '../../src/config';
 
 describe('Logger', () => {
   let consoleSpy: {
@@ -32,18 +31,18 @@ describe('Logger', () => {
 
   it('should format message correctly with timestamp and level', () => {
     logger.info('test message');
-    
+
     expect(consoleSpy.log).toHaveBeenCalledWith(
-      expect.stringMatching(/^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] test message$/)
+      expect.stringMatching(
+        /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] \[INFO\] test message$/
+      )
     );
   });
 
   it('should include meta data in log output', () => {
     logger.info('test message', { foo: 'bar' });
-    
-    expect(consoleSpy.log).toHaveBeenCalledWith(
-      expect.stringContaining('{"foo":"bar"}')
-    );
+
+    expect(consoleSpy.log).toHaveBeenCalledWith(expect.stringContaining('{"foo":"bar"}'));
   });
 
   it('should log error messages to console.error', () => {
@@ -73,9 +72,9 @@ describe('Logger', () => {
         __esModule: true,
         default: { logLevel: 'info' },
       }));
-      
+
       const { default: loggerInfo } = await import('../../src/logger');
-      
+
       loggerInfo.debug('debug message');
       expect(consoleSpy.log).not.toHaveBeenCalled();
 
@@ -121,23 +120,21 @@ describe('Logger', () => {
 
       logger.info('circular message', circular);
 
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('[Circular]')
-      );
+      expect(consoleSpy.log).toHaveBeenCalledWith(expect.stringContaining('[Circular]'));
     });
 
     it('should handle BigInt safely', () => {
       logger.info('bigint message', { value: BigInt(123) });
 
-      expect(consoleSpy.log).toHaveBeenCalledWith(
-        expect.stringContaining('"value":"123n"')
-      );
+      expect(consoleSpy.log).toHaveBeenCalledWith(expect.stringContaining('"value":"123n"'));
     });
 
     it('should handle unserializable errors gracefully', () => {
       // Mock JSON.stringify to throw an error to test the catch block
       const originalStringify = JSON.stringify;
-      JSON.stringify = jest.fn(() => { throw new Error('Mock error'); });
+      JSON.stringify = jest.fn(() => {
+        throw new Error('Mock error');
+      });
 
       try {
         logger.info('error message', { valid: 'object' });

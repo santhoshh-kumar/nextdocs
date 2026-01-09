@@ -40,16 +40,18 @@ export const server = http.createServer((req, res) => {
   }
 
   if (req.url === '/health' && req.method === 'GET') {
-    res.writeHead(200, { 
+    res.writeHead(200, {
       'Content-Type': 'application/json',
       ...corsHeaders,
     });
-    res.end(JSON.stringify({
-      status: 'healthy',
-      uptime: process.uptime(),
-      rooms: rooms.size,
-      timestamp: new Date().toISOString(),
-    }));
+    res.end(
+      JSON.stringify({
+        status: 'healthy',
+        uptime: process.uptime(),
+        rooms: rooms.size,
+        timestamp: new Date().toISOString(),
+      })
+    );
     return;
   }
 
@@ -60,15 +62,17 @@ export const server = http.createServer((req, res) => {
       lastActivity: data.lastActivity,
     }));
 
-    res.writeHead(200, { 
+    res.writeHead(200, {
       'Content-Type': 'application/json',
       ...corsHeaders,
     });
-    res.end(JSON.stringify({
-      rooms: roomsData,
-      totalRooms: rooms.size,
-      totalConnections: roomsData.reduce((sum, r) => sum + r.connections, 0),
-    }));
+    res.end(
+      JSON.stringify({
+        rooms: roomsData,
+        totalRooms: rooms.size,
+        totalConnections: roomsData.reduce((sum, r) => sum + r.connections, 0),
+      })
+    );
     return;
   }
 
@@ -76,7 +80,7 @@ export const server = http.createServer((req, res) => {
   res.end('Not Found');
 });
 
-export const wss = new WebSocketServer({ 
+export const wss = new WebSocketServer({
   server,
   // We set a hard limit here, but we also check in application logic for logging/metrics
   maxPayload: config.limits.maxPayload,
@@ -96,48 +100,63 @@ function getClientIp(req: http.IncomingMessage): string {
 
 wss.on('connection', (conn: WebSocket, req: http.IncomingMessage) => {
   const clientIp = getClientIp(req);
-  
+
   const currentGlobalConns = wss.clients.size;
   if (currentGlobalConns > config.limits.maxGlobalConns) {
-     logger.warn('Connection rejected: Global connection limit reached', { ip: clientIp, current: currentGlobalConns, max: config.limits.maxGlobalConns });
-     conn.close(1008, 'Server busy');
-     return;
+    logger.warn('Connection rejected: Global connection limit reached', {
+      ip: clientIp,
+      current: currentGlobalConns,
+      max: config.limits.maxGlobalConns,
+    });
+    conn.close(1008, 'Server busy');
+    return;
   }
 
   const memoryUsage = process.memoryUsage();
   const heapUsedRatio = memoryUsage.heapUsed / memoryUsage.heapTotal;
   if (heapUsedRatio > config.limits.memoryThreshold) {
-      logger.warn('Connection rejected: Memory threshold exceeded', { ip: clientIp, heapUsedRatio, threshold: config.limits.memoryThreshold });
-      conn.close(1008, 'Server busy');
-      return;
+    logger.warn('Connection rejected: Memory threshold exceeded', {
+      ip: clientIp,
+      heapUsedRatio,
+      threshold: config.limits.memoryThreshold,
+    });
+    conn.close(1008, 'Server busy');
+    return;
   }
 
   const currentIpConns = ipConnections.get(clientIp) || 0;
   if (currentIpConns >= config.limits.maxConnsPerIp) {
-      logger.warn('Connection rejected: IP connection limit reached', { ip: clientIp, current: currentIpConns, max: config.limits.maxConnsPerIp });
-      conn.close(1008, 'Too many connections');
-      return;
+    logger.warn('Connection rejected: IP connection limit reached', {
+      ip: clientIp,
+      current: currentIpConns,
+      max: config.limits.maxConnsPerIp,
+    });
+    conn.close(1008, 'Too many connections');
+    return;
   }
 
   const now = Date.now();
   const timestamps = ipConnectionTimestamps.get(clientIp) || [];
-  
+
   const windowStart = now - 60000;
   while (timestamps.length > 0 && timestamps[0] < windowStart) {
     timestamps.shift();
   }
-  
+
   if (timestamps.length >= config.limits.maxConnRatePerMin) {
-      logger.warn('Connection rejected: IP connection rate limit exceeded', { ip: clientIp, rate: timestamps.length, max: config.limits.maxConnRatePerMin });
-      conn.close(1008, 'Rate limit exceeded');
-      return;
-  }
-  
-  timestamps.push(now);
-  if (!ipConnectionTimestamps.has(clientIp)) {
-      ipConnectionTimestamps.set(clientIp, timestamps);
+    logger.warn('Connection rejected: IP connection rate limit exceeded', {
+      ip: clientIp,
+      rate: timestamps.length,
+      max: config.limits.maxConnRatePerMin,
+    });
+    conn.close(1008, 'Rate limit exceeded');
+    return;
   }
 
+  timestamps.push(now);
+  if (!ipConnectionTimestamps.has(clientIp)) {
+    ipConnectionTimestamps.set(clientIp, timestamps);
+  }
 
   let roomId: string;
   try {
@@ -146,8 +165,8 @@ wss.on('connection', (conn: WebSocket, req: http.IncomingMessage) => {
     const url = new URL(rawUrl, baseUrl);
     roomId = url.pathname.slice(1);
   } catch (err) {
-    logger.warn('Connection rejected: failed to parse URL', { 
-      ip: clientIp, 
+    logger.warn('Connection rejected: failed to parse URL', {
+      ip: clientIp,
       url: req.url,
       error: (err as Error).message,
     });
@@ -157,7 +176,10 @@ wss.on('connection', (conn: WebSocket, req: http.IncomingMessage) => {
   }
 
   if (!roomId) {
-    logger.warn('Connection rejected: missing room ID', { ip: clientIp, url: req.url });
+    logger.warn('Connection rejected: missing room ID', {
+      ip: clientIp,
+      url: req.url,
+    });
     conn.close(1008, 'Room ID required');
 
     return;
@@ -182,65 +204,78 @@ wss.on('connection', (conn: WebSocket, req: http.IncomingMessage) => {
   try {
     setupWSConnection(conn, roomId);
   } catch (error) {
-    logger.error('Error setting up Yjs connection', { roomId, error: (error as Error).message });
+    logger.error('Error setting up Yjs connection', {
+      roomId,
+      error: (error as Error).message,
+    });
     room.connections -= 1;
     if (room.connections <= 0) {
-       logger.info('Room empty after setup failure, marking for cleanup', { roomId });
-       room.lastActivity = Date.now();
+      logger.info('Room empty after setup failure, marking for cleanup', {
+        roomId,
+      });
+      room.lastActivity = Date.now();
     }
     conn.close(1011, 'Internal server error'); // 1011: Internal Error
     return;
   }
-  
+
   let messageCount = 0;
   let lastMessageReset = Date.now();
 
-  conn.on('message', (data: Buffer | ArrayBuffer | Buffer[], isBinary: boolean) => {
-      const now = Date.now();
-      
-      if (now - lastMessageReset > 1000) {
-          messageCount = 0;
-          lastMessageReset = now;
-      }
+  conn.on('message', (data: Buffer | ArrayBuffer | Buffer[]) => {
+    const now = Date.now();
 
-      messageCount++;
-      if (messageCount > config.limits.maxMsgRatePerSec) {
-          logger.warn('Client disconnected: Message rate limit exceeded', { ip: clientIp, roomId, rate: messageCount });
-          conn.close(1008, 'Message rate limit exceeded');
-          return;
-      }
+    if (now - lastMessageReset > 1000) {
+      messageCount = 0;
+      lastMessageReset = now;
+    }
 
-      // We rely on ws configuration for the hard payload limit (maxPayload),
-      // but double-check here to allow for potentially finer application control in the future
-      // and better logging context.
-      let size = 0;
-      if (Buffer.isBuffer(data)) {
-          size = data.length;
-      } else if (data instanceof ArrayBuffer) {
-          size = data.byteLength;
-      } else if (Array.isArray(data)) {
-           size = data.reduce((acc, buf) => acc + buf.length, 0);
-      }
+    messageCount++;
+    if (messageCount > config.limits.maxMsgRatePerSec) {
+      logger.warn('Client disconnected: Message rate limit exceeded', {
+        ip: clientIp,
+        roomId,
+        rate: messageCount,
+      });
+      conn.close(1008, 'Message rate limit exceeded');
+      return;
+    }
 
-      if (size > config.limits.maxPayload) {
-           logger.warn('Client disconnected: Max payload size exceeded', { ip: clientIp, size, max: config.limits.maxPayload });
-           conn.close(1009, 'Payload too large');
-           return;
-      }
+    // We rely on ws configuration for the hard payload limit (maxPayload),
+    // but double-check here to allow for potentially finer application control in the future
+    // and better logging context.
+    let size = 0;
+    if (Buffer.isBuffer(data)) {
+      size = data.length;
+    } else if (data instanceof ArrayBuffer) {
+      size = data.byteLength;
+    } else if (Array.isArray(data)) {
+      size = data.reduce((acc, buf) => acc + buf.length, 0);
+    }
+
+    if (size > config.limits.maxPayload) {
+      logger.warn('Client disconnected: Max payload size exceeded', {
+        ip: clientIp,
+        size,
+        max: config.limits.maxPayload,
+      });
+      conn.close(1009, 'Payload too large');
+      return;
+    }
   });
 
   conn.on('close', () => {
     logger.info('Client disconnected', { roomId, ip: clientIp });
-    
+
     const current = ipConnections.get(clientIp);
     if (current && current > 0) {
-        ipConnections.set(clientIp, current - 1);
+      ipConnections.set(clientIp, current - 1);
     }
     // We don't clear timestamps immediately to enforce rate limit even after disconnection
-    
+
     if (rooms.has(roomId)) {
       room.connections -= 1;
-      
+
       if (room.connections <= 0) {
         logger.info('Room empty, marking for cleanup', { roomId });
         room.lastActivity = Date.now();
@@ -259,16 +294,22 @@ export function cleanupInactiveRooms(): void {
 
   for (const [roomId, room] of rooms.entries()) {
     const inactive = now - room.lastActivity > config.roomInactiveTimeout;
-    
+
     if (room.connections === 0 && inactive) {
       rooms.delete(roomId);
       cleaned++;
-      logger.info('Room cleaned up', { roomId, inactiveMs: now - room.lastActivity });
+      logger.info('Room cleaned up', {
+        roomId,
+        inactiveMs: now - room.lastActivity,
+      });
     }
   }
 
   if (cleaned > 0) {
-    logger.info('Cleanup completed', { roomsCleaned: cleaned, activeRooms: rooms.size });
+    logger.info('Cleanup completed', {
+      roomsCleaned: cleaned,
+      activeRooms: rooms.size,
+    });
   }
 }
 
@@ -301,7 +342,10 @@ if (require.main === module) {
   process.on('SIGINT', () => shutdown('SIGINT'));
 
   process.on('uncaughtException', (error: Error) => {
-    logger.error('Uncaught exception', { error: error.message, stack: error.stack });
+    logger.error('Uncaught exception', {
+      error: error.message,
+      stack: error.stack,
+    });
     process.exit(1);
   });
 
