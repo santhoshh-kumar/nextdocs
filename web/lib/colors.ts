@@ -20,3 +20,7 @@ export const COLORS = [
 export function getRandomColor(): string {
   return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
+
+export function generateRandomHexColor(): string {
+  return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+}

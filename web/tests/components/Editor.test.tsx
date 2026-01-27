@@ -1,15 +1,19 @@
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import Editor from '../../components/Editor';
-import { config } from '@/lib/config';
 
 jest.mock('y-websocket', () => ({
   __esModule: true,
   WebsocketProvider: jest.fn().mockImplementation(() => ({
     on: jest.fn(),
     destroy: jest.fn(),
-    awareness: {},
+    awareness: {
+      on: jest.fn(),
+      off: jest.fn(),
+      getStates: jest.fn().mockReturnValue(new Map()),
+    },
   })),
 }));
 
@@ -57,18 +61,9 @@ describe('Editor Component', () => {
   });
 
   it('renders the editor container', () => {
-    render(<Editor roomId={roomId} />);
+    const mockProvider = new WebsocketProvider('ws://test', 'test', new Y.Doc());
+    const mockDoc = new Y.Doc();
+    render(<Editor roomId={roomId} userName="Test User" userColor="#000000" provider={mockProvider} ydoc={mockDoc} />);
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
-  });
-
-  it('initializes WebsocketProvider with correct URL and room ID', () => {
-    render(<Editor roomId={roomId} />);
-
-    expect(WebsocketProvider).toHaveBeenCalledTimes(1);
-    expect(WebsocketProvider).toHaveBeenCalledWith(
-      config.realtime.wsUrl,
-      roomId,
-      expect.anything()
-    );
   });
 });
