@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import * as syncing from 'y-protocols/sync';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
+import { WebSocket } from 'ws';
 
 // Mock logger to avoid console output during tests
 jest.mock('../../src/logger', () => ({
