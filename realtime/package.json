@@ -1,8 +1,21 @@
 {
   "name": "realtime",
   "version": "1.0.0",
-  "description": "",
+  "description": "Realtime collaboration server for NextDesk document editor",
   "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/server.js",
+      "require": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/blocks.js",
+      "require": "./dist/types/blocks.js",
+      "types": "./dist/types/blocks.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",

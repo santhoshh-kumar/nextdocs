@@ -7,7 +7,9 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "moduleResolution": "node",
-    "types": ["node"]
+    "types": ["node"],
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
