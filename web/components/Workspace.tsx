@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import Editor from "./Editor";
+import Editor from './Editor';
 
 export default function Workspace() {
   return (
