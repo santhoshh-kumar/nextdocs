@@ -1,18 +1,23 @@
 {
   "name": "nextdesk-root",
   "private": true,
+  "packageManager": "npm@11.6.2",
   "workspaces": [
     "web",
     "realtime"
   ],
   "scripts": {
-    "lint": "npm run lint --workspaces",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml}\"",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "turbo run format",
     "prepare": "husky install"
   },
   "devDependencies": {
     "husky": "^9.0.0",
     "lint-staged": "^15.2.0",
-    "prettier": "^3.2.0"
+    "prettier": "^3.2.0",
+    "turbo": "^2"
   }
 }

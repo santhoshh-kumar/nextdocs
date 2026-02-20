@@ -36,10 +36,10 @@ jobs:
       - name: Install Dependencies
         run: npm ci
       - name: Check Formatting
-        run: npm run format -w realtime
+        run: npx turbo run format --filter=realtime
       - name: Lint
-        run: npm run lint -w realtime
+        run: npx turbo run lint --filter=realtime
       - name: Test
-        run: npm test -w realtime
+        run: npx turbo run test --filter=realtime
       - name: Build
-        run: npm run build -w realtime
+        run: npx turbo run build --filter=realtime
