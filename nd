@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# We use this script to unify development tasks across services,
-# abstracting Docker Compose interactions.
+# Unified development CLI for NextDesk.
+# Delegates to Turborepo (web, realtime) and Maven (api).
 #
-# We provide the following commands via ./nd: 
-# test, lint, format, build, build-image, restart, logs, shell, db, up, down.
+# Usage: ./nd <command> [service] [--fix]
+# Commands: dev, lint, format, test, build, db
 node scripts/nd.js "$@"

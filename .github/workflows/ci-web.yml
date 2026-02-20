@@ -36,8 +36,8 @@ jobs:
       - name: Install Dependencies
         run: npm ci
       - name: Lint
-        run: npm run lint -w web
+        run: npx turbo run lint --filter=web
       - name: Test
-        run: npm test -w web
+        run: npx turbo run test --filter=web
       - name: Build
-        run: npm run build -w web
+        run: npx turbo run build --filter=web
