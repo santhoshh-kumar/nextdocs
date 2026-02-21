@@ -12,7 +12,7 @@ const command = args[0];
 const service = args[1];
 
 const ROOT = path.resolve(__dirname, '..');
-const JS_SERVICES = ['web', 'realtime'];
+const ALL_SERVICES = ['api', 'web', 'realtime'];
 
 const isWin = process.platform === 'win32';
 const mvnw = isWin ? 'mvnw.cmd' : './mvnw';
@@ -93,12 +93,20 @@ function usage() {
   console.log('  build [service]     Build packages');
   console.log('  db                  Open psql shell');
   console.log();
-  console.log('Services: api, web, realtime');
+  console.log(`Services: ${ALL_SERVICES.join(', ')}`);
   console.log('Omit service to run across all.');
   process.exit(1);
 }
 
+function validateService(svc) {
+  if (!ALL_SERVICES.includes(svc)) {
+    console.error(`Unknown service: '${svc}'. Valid services: ${ALL_SERVICES.join(', ')}`);
+    process.exit(1);
+  }
+}
+
 function runForService(task, svc) {
+  validateService(svc);
   if (svc === 'api') {
     if (!API_COMMANDS[task]) {
       console.error(`Command '${task}' not supported for api`);
@@ -216,6 +224,7 @@ switch (command) {
 
   case 'lint':
     if (service) {
+      validateService(service);
       if (service === 'api' && isFix) {
         run(`${mvnw} spotless:apply --no-transfer-progress`, { cwd: path.join(ROOT, 'api') });
       } else if (service === 'api') {
@@ -230,6 +239,7 @@ switch (command) {
 
   case 'format':
     if (service) {
+      validateService(service);
       if (service === 'api') {
         run(`${mvnw} spotless:apply --no-transfer-progress`, { cwd: path.join(ROOT, 'api') });
       } else {
