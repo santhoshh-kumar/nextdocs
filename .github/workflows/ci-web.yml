@@ -7,37 +7,97 @@ on:
       - "web/**"
       - "package.json"
       - "package-lock.json"
+      - "turbo.json"
+      - "tsconfig.base.json"
       - ".prettierrc"
       - ".editorconfig"
+      - ".github/workflows/ci-web.yml"
   pull_request:
     branches: ["main"]
     paths:
       - "web/**"
       - "package.json"
       - "package-lock.json"
+      - "turbo.json"
+      - "tsconfig.base.json"
       - ".prettierrc"
       - ".editorconfig"
+      - ".github/workflows/ci-web.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
 jobs:
-  build-web:
+  # Job 1: Code quality checks (format + lint)
+  lint:
+    name: Format & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Node.js
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
           cache-dependency-path: package-lock.json
-      - name: Install Dependencies
+
+      - name: Install dependencies
         run: npm ci
+
+      - name: Check formatting
+        run: npx turbo run format --filter=web
+
       - name: Lint
         run: npx turbo run lint --filter=web
-      - name: Test
+
+  # Job 2: Unit & integration tests
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
         run: npx turbo run test --filter=web
+
+  # Job 3: Production build
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build
         run: npx turbo run build --filter=web

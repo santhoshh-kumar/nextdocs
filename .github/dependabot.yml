@@ -1,0 +1,79 @@
+version: 2
+
+updates:
+  # npm dependencies (root monorepo + workspaces)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      web-dependencies:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+      - "npm"
+
+  # Maven dependencies (API service)
+  - package-ecosystem: "maven"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      java-dependencies:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+      - "java"
+
+  # GitHub Actions versions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      ci-dependencies:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+      - "ci"
+
+  # Docker base images
+  - package-ecosystem: "docker"
+    directory: "/api"
+    schedule:
+      interval: "monthly"
+    groups:
+      docker-api:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/web"
+    schedule:
+      interval: "monthly"
+    groups:
+      docker-web:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker"
+    directory: "/realtime"
+    schedule:
+      interval: "monthly"
+    groups:
+      docker-realtime:
+        patterns: ["*"]
+    labels:
+      - "dependencies"
+      - "docker"
