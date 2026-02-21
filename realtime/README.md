@@ -1,4 +1,4 @@
-# NextDesk Realtime Server
+# NextDocs Realtime Server
 
 WebSocket server powered by [Yjs](https://github.com/yjs/yjs) for real-time collaborative editing.
 

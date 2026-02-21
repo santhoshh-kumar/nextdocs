@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Unified development CLI for NextDesk.
+# Unified development CLI for NextDocs.
 # Delegates to Turborepo (web, realtime) and Maven (api).
 #
 # Usage: ./nd <command> [service] [--fix]

@@ -17,12 +17,12 @@ const JS_SERVICES = ['web', 'realtime'];
 const isWin = process.platform === 'win32';
 const mvnw = isWin ? 'mvnw.cmd' : './mvnw';
 
-const POSTGRES_CONTAINER = 'nextdesk-postgres';
+const POSTGRES_CONTAINER = 'nextdocs-postgres';
 const POSTGRES_IMAGE = 'postgres:15-alpine';
 const POSTGRES_PORT = '5432';
-const POSTGRES_USER = 'nextdesk';
-const POSTGRES_PASSWORD = 'nextdesk';
-const POSTGRES_DB = 'nextdesk';
+const POSTGRES_USER = 'nextdocs';
+const POSTGRES_PASSWORD = 'nextdocs';
+const POSTGRES_DB = 'nextdocs';
 
 function run(cmd, opts = {}) {
   console.log(`\x1b[34m> ${cmd}\x1b[0m`);
@@ -67,7 +67,7 @@ function ensurePostgres() {
     `-e POSTGRES_USER=${POSTGRES_USER}`,
     `-e POSTGRES_PASSWORD=${POSTGRES_PASSWORD}`,
     `-e POSTGRES_DB=${POSTGRES_DB}`,
-    `-v nextdesk_pgdata:/var/lib/postgresql/data`,
+    `-v nextdocs_pgdata:/var/lib/postgresql/data`,
     POSTGRES_IMAGE,
   ].join(' '));
 }

@@ -1,7 +1,7 @@
 {
   "name": "realtime",
   "version": "1.0.0",
-  "description": "Realtime collaboration server for NextDesk document editor",
+  "description": "Realtime collaboration server for NextDocs document editor",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
   "exports": {

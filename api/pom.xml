@@ -8,11 +8,11 @@
 		<version>4.0.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.nextdesk</groupId>
+	<groupId>com.nextdocs</groupId>
 	<artifactId>api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>nextdesk</name>
-	<description>NextDesk API Backend</description>
+	<name>nextdocs</name>
+	<description>An open-source block-based document editor for structured and collaborative writing.</description>
 	<url/>
 	<licenses>
 		<license/>

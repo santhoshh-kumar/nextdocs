@@ -355,7 +355,7 @@ if (require.main === module) {
   });
 
   server.listen(config.port, config.host, () => {
-    logger.info('NextDesk Realtime Server started', {
+    logger.info('NextDocs Realtime Server started', {
       host: config.host,
       port: config.port,
       corsOrigins: config.corsOrigins,

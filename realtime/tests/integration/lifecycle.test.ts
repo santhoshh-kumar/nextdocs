@@ -76,7 +76,7 @@ describe('Server Lifecycle Integration', () => {
       const onStdout = (data: Buffer) => {
         const str = data.toString();
         output += str;
-        if (str.includes('NextDesk Realtime Server started')) {
+        if (str.includes('NextDocs Realtime Server started')) {
           settle(undefined, { process: proc, output });
         }
       };
@@ -143,7 +143,7 @@ describe('Server Lifecycle Integration', () => {
       PORT: port.toString(),
     });
     serverProcess = proc;
-    expect(output).toContain('NextDesk Realtime Server started');
+    expect(output).toContain('NextDocs Realtime Server started');
     // Log content is JSON stringified, so quotes might be escaped
     // or formatted differently
     expect(output).toContain(`"port":${port}`);

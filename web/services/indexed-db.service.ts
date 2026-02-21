@@ -1,7 +1,7 @@
 import { openDB, type IDBPDatabase } from 'idb';
 import type { StoredDocument } from '@/types/document.types';
 
-const DB_NAME = 'nextdesk-db';
+const DB_NAME = 'nextdocs-db';
 const DB_VERSION = 1;
 const DOCUMENTS_STORE = 'documents';
 

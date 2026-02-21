@@ -1,12 +1,12 @@
-package com.nextdesk.api;
+package com.nextdocs.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class NextdeskApiApplication {
+public class NextdocsApiApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(NextdeskApiApplication.class, args);
+        SpringApplication.run(NextdocsApiApplication.class, args);
     }
 }
